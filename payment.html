@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - MD Fine Jewelry</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto max-w-2xl my-12 p-8 bg-white shadow-lg rounded-lg">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Payment Method</h1>
+            <p class="text-gray-500">Select your preferred payment method</p>
+        </div>
+
+        <div id="order-details" class="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+            <h3 class="font-semibold text-gray-700 mb-4">Order Summary</h3>
+            <div id="payment-order-info" class="space-y-2 text-sm"></div>
+        </div>
+
+        <div class="space-y-4 mb-8">
+            <!-- Gcash -->
+            <div class="payment-option cursor-pointer p-4 border-2 border-gray-300 rounded-lg hover:border-primary hover:bg-blue-50 transition-all" data-payment="gcash">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-12 bg-blue-100 rounded flex items-center justify-center">
+                        <i class="ri-wallet-2-line text-3xl text-blue-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900">GCash</h4>
+                        <p class="text-sm text-gray-600">Pay via GCash mobile wallet</p>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" name="payment" class="payment-radio" value="gcash">
+                    </div>
+                </div>
+            </div>
+
+            <!-- BDO -->
+            <div class="payment-option cursor-pointer p-4 border-2 border-gray-300 rounded-lg hover:border-primary hover:bg-blue-50 transition-all" data-payment="bdo">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-12 bg-red-100 rounded flex items-center justify-center">
+                        <i class="ri-bank-line text-3xl text-red-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900">BDO Online Banking</h4>
+                        <p class="text-sm text-gray-600">Pay via BDO bank transfer</p>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" name="payment" class="payment-radio" value="bdo">
+                    </div>
+                </div>
+            </div>
+
+            <!-- BPI -->
+            <div class="payment-option cursor-pointer p-4 border-2 border-gray-300 rounded-lg hover:border-primary hover:bg-blue-50 transition-all" data-payment="bpi">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-12 bg-blue-100 rounded flex items-center justify-center">
+                        <i class="ri-bank-line text-3xl text-blue-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900">BPI Online Banking</h4>
+                        <p class="text-sm text-gray-600">Pay via BPI bank transfer</p>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" name="payment" class="payment-radio" value="bpi">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <button id="confirm-payment-btn" class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Confirm Payment
+            </button>
+            <button id="cancel-payment-btn" class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-blue-50 transition-colors">
+                Cancel
+            </button>
+        </div>
+
+        <p class="text-center text-xs text-gray-500 mt-6">Your transaction is secure and encrypted.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const paymentOptions = document.querySelectorAll('.payment-option');
+            const confirmBtn = document.getElementById('confirm-payment-btn');
+            const cancelBtn = document.getElementById('cancel-payment-btn');
+            const orderInfoDiv = document.getElementById('payment-order-info');
+            let selectedPayment = null;
+
+            // Get order data from sessionStorage (passed from invoice) or URL (QR scan)
+            let orderData = JSON.parse(sessionStorage.getItem('currentOrder')) || {};
+
+            // If order passed via URL (from QR), decode it and set sessionStorage/current data
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('order')) {
+                try {
+                    const b64 = params.get('order');
+                    // decode base64 -> UTF8
+                    const json = decodeURIComponent(escape(atob(b64)));
+                    const parsed = JSON.parse(json);
+                    orderData = parsed;
+                    sessionStorage.setItem('currentOrder', JSON.stringify(parsed));
+                } catch (err) {
+                    console.error('Failed to parse order from URL', err);
+                }
+            }
+
+            // Display order details
+            if (orderData.items && orderData.total) {
+                orderInfoDiv.innerHTML = `
+                    <div class="flex justify-between">
+                        <span>Items:</span>
+                        <span>${orderData.items.length} item(s)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Amount:</span>
+                        <span class="font-semibold">₱${orderData.total.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Order ID:</span>
+                        <span>${orderData.orderId}</span>
+                    </div>
+                `;
+            }
+
+            // Payment option selection
+            paymentOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove previous selection
+                    paymentOptions.forEach(opt => {
+                        opt.classList.remove('border-primary', 'bg-blue-50');
+                    });
+
+                    // Add selection to clicked option
+                    option.classList.add('border-primary', 'bg-blue-50');
+                    // set radio on the right
+                    const radio = option.querySelector('.payment-radio');
+                    if (radio) radio.checked = true;
+                    selectedPayment = option.dataset.payment;
+                    confirmBtn.disabled = false;
+                });
+            });
+
+            // Sync clicks on the radio itself
+            document.querySelectorAll('.payment-radio').forEach(r => {
+                r.addEventListener('change', (e) => {
+                    if (!e.target.checked) return;
+                    // trigger selection styling
+                    paymentOptions.forEach(opt => {
+                        opt.classList.remove('border-primary', 'bg-blue-50');
+                        const rad = opt.querySelector('.payment-radio');
+                        if (rad) rad.checked = false;
+                    });
+                    const parent = e.target.closest('.payment-option');
+                    parent.classList.add('border-primary', 'bg-blue-50');
+                    e.target.checked = true;
+                    selectedPayment = parent.dataset.payment;
+                    confirmBtn.disabled = false;
+                });
+            });
+
+            confirmBtn.addEventListener('click', () => {
+                if (!selectedPayment) {
+                    alert('Please select a payment method');
+                    return;
+                }
+
+                // Save payment method and process order
+                sessionStorage.setItem('paymentMethod', selectedPayment);
+                
+                // Add or update order in user's order history
+                const currentUser = JSON.parse(localStorage.getItem('md_currentUser'));
+                let newOrderRef = null;
+                if (currentUser && orderData) {
+                    if (!currentUser.orders) currentUser.orders = [];
+
+                    // Check if order already exists (created during checkout). If so, update it instead of pushing duplicate.
+                    const existing = currentUser.orders.find(o => o.id === orderData.orderId);
+                    if (existing) {
+                        existing.status = 'To Ship';
+                        existing.paymentMethod = selectedPayment;
+                        existing.date = existing.date || new Date().toLocaleDateString();
+                        newOrderRef = existing;
+                    } else {
+                        // Create order object with "To Ship" as initial status
+                        const newOrder = {
+                            id: orderData.orderId,
+                            items: orderData.items,
+                            total: orderData.total,
+                            status: 'To Ship',
+                            date: new Date().toISOString(),
+                            timestamp: Date.now(),
+                            paymentMethod: selectedPayment,
+                            rated: false
+                        };
+                        currentUser.orders.push(newOrder);
+                        newOrderRef = newOrder;
+                    }
+
+                    localStorage.setItem('md_currentUser', JSON.stringify(currentUser));
+
+                    // Update users array
+                    const users = JSON.parse(localStorage.getItem('md_users')) || [];
+                    const userIndex = users.findIndex(u => u.email === currentUser.email);
+                    if (userIndex !== -1) {
+                        users[userIndex] = currentUser;
+                        localStorage.setItem('md_users', JSON.stringify(users));
+                    }
+                }
+
+                // Clear cart
+                localStorage.setItem('md_cart', JSON.stringify([]));
+
+                // Prepare final invoice data and redirect to invoice page (final view without QR)
+                try {
+                    const finalInvoice = {
+                        items: orderData.items,
+                        total: orderData.total,
+                        customer: currentUser,
+                        orderId: newOrderRef ? newOrderRef.id : orderData.orderId,
+                        status: newOrderRef ? newOrderRef.status : 'To Ship',
+                        paymentMethod: selectedPayment
+                    };
+                    sessionStorage.setItem('currentOrder', JSON.stringify(finalInvoice));
+                    // Keep paymentMethod in sessionStorage so it's available on final invoice
+                    sessionStorage.setItem('paymentMethod', selectedPayment);
+                } catch (err) {
+                    console.error('Failed to store final invoice', err);
+                }
+
+                alert('Payment successful! Your order has been placed.');
+                // Redirect to invoice in final mode (no QR, thank-you message)
+                window.location.href = 'invoice.html?final=1';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                window.history.back();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+/* General Body and Typography */
+body {
+    font-family: 'Poppins', sans-serif;
+    scroll-behavior: smooth;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+}
+
+.logo {
+    font-family: 'Playfair Display', serif;
+    letter-spacing: 1px;
+}
+
+/* Navigation Link Underline Effect */
+.nav-link {
+    position: relative;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1.5px;
+    bottom: -3px;
+    left: 0;
+    background-color: #b8860b; /* primary color */
+    transition: width 0.3s ease-in-out;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+/* Product Card Hover Effects */
+.product-card:hover .quick-view {
+    opacity: 1;
+}
+
+.product-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Remove Number Input Spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Dropdown Menu Logic */
+.cart-dropdown,
+.account-dropdown,
+.wishlist-dropdown {
+    width: 320px;
+    display: none;
+}
+.cart-dropdown.show,
+.account-dropdown.show,
+.wishlist-dropdown.show,
+.notification-dropdown.show,
+#search-bar.show {
+    display: block;
+}
+
+.account-dropdown {
+    width: 200px;
+}
+
+/* Wishlist Icon Fill Color */
+.wishlist-toggle.active i {
+    color: #b8860b; /* primary color */
+    font-weight: bold;
+}
+
+/* Category Card Hover Effect */
+.category-card:hover .explore-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Toast Notification Styling */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    background-color: rgba(17, 24, 39, 0.95);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 9999 !important;
+    transform: translateY(150px);
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+    pointer-events: auto;
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    min-width: 250px;
+}
+
+.toast.show {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* Rating Stars */
+.rating-stars .star {
+    color: #d1d5db; /* gray-300 */
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.rating-stars:hover .star {
+    color: #f59e0b; /* amber-500 */
+}
+.rating-stars .star:hover ~ .star {
+    color: #d1d5db; /* gray-300 */
+}
+.rating-stars .star.selected {
+    color: #f59e0b; /* amber-500 */
+}
+
+/* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #1f2937; /* dark gray */
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #b8860b; /* primary color */
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #d4af37; /* lighter primary color */
+        
+    }
+
+

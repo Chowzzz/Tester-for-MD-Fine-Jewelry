@@ -1,0 +1,4 @@
+This file is a temporary note used during editing and can be deleted.
+It was created as part of the edit that replaced the external QR image with an inline fake SVG QR in `invoice.html`.
+
+No runtime effect.

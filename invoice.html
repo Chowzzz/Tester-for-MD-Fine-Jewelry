@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - MD Fine Jewelry</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto max-w-2xl my-12 p-8 bg-white shadow-lg rounded-lg">
+        <div class="text-center mb-8">
+            <!-- Use a placeholder or a valid src. This will show a broken icon if the file isn't in the same folder -->
+            <img src="White and Gold Minimalist Diamond Jewelry Store Logo.jpg" alt="MD Fine Jewelry Logo" class="mx-auto mb-6 h-20" onerror="this.src='https://placehold.co/200x80/FFFFFF/b8860b?text=MD+Fine+Jewelry&font=playfairdisplay'; this.onerror=null;">
+            <p id="invoice-header-msg" class="text-gray-500">Your invoice details are below.</p>
+        </div>
+
+        <div id="invoice-details" class="border-b pb-6 mb-6">
+            <!-- Customer and Order details will be injected here -->
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-4">Order Summary</h3>
+            <div id="invoice-items" class="space-y-4">
+                <!-- Items will be injected here -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+                <div class="space-y-2 text-right">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Subtotal:</span>
+                        <span id="invoice-subtotal" class="font-medium">₱0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Shipping:</span>
+                        <span class="font-medium">Free</span>
+                    </div>
+                    <div class="flex justify-between text-xl font-bold">
+                        <span>Total:</span>
+                        <span id="invoice-total">₱0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <div id="payment-qr" class="flex justify-center mb-4"></div>
+                <p id="qr-helper" class="text-xs text-gray-500 mb-2">Scan the QR code with your device or click the button below.</p>
+                <button id="proceed-to-payment-btn" class="w-full border-2 border-gray-300 text-Black py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                    Proceed to Payment
+                </button>
+                <p id="payment-helper" class="text-xs text-gray-500 mt-4">You'll be redirected to select your payment method</p>
+            </div>
+        </div>
+
+        <!-- Back to shop link intentionally removed as requested -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check both localStorage (for final paid invoice) and sessionStorage (for initial checkout)
+            const orderData = JSON.parse(localStorage.getItem('currentOrder')) || JSON.parse(sessionStorage.getItem('currentOrder'));
+            
+            if (!orderData) {
+                document.body.innerHTML = '<p class="text-center p-10">No order data found. <a href="md.html" class="text-blue-500">Go back to shop</a>.</p>';
+                return;
+            }
+
+            // Clear the localStorage item after reading it so it's not reused accidentally
+            // but only if it's the final invoice (from localStorage)
+            if (localStorage.getItem('currentOrder')) {
+                localStorage.removeItem('currentOrder');
+            }
+
+            const { items, total, customer, orderId } = orderData;
+
+            // Handle customer data being incomplete (e.g., guest)
+            const customerName = customer?.name || customer?.fullName || 'Guest Customer';
+            const customerEmail = customer?.email || 'N/A';
+            const customerAddress = customer?.address || 'N/A';
+
+            // Display Order/Customer Details
+            document.getElementById('invoice-details').innerHTML = `
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <h3 class="font-semibold mb-1">Billed To:</h3>
+                        <p>${customerName}</p>
+                        <p>${customerEmail}</p>
+                        <p>${customerAddress}</p>
+                    </div>
+                    <div class="text-right">
+                        <p><span class="font-semibold">Invoice #:</span> ${orderId}</p>
+                        <p><span class="font-semibold">Date:</span> ${new Date().toLocaleDateString()}</p>
+                    </div>
+                </div>
+            `;
+
+            // Display Items
+            document.getElementById('invoice-items').innerHTML = items.map(item => `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-medium">${item.name}</p>
+                        <p class="text-sm text-gray-500">Quantity: ${item.quantity}</p>
+                    </div>
+                        <p class="font-medium">₱${(item.price * item.quantity).toFixed(2)}</p>
+                </div>
+            `).join('');
+
+            // Display Totals
+            document.getElementById('invoice-subtotal').textContent = `₱${total.toFixed(2)}`;
+            document.getElementById('invoice-total').textContent = `₱${total.toFixed(2)}`;
+
+            // Determine if this is a final invoice (shown after payment). If so, hide QR and Proceed.
+            const params = new URLSearchParams(window.location.search);
+            const isFinal = params.get('final') === '1';
+
+            const proceedBtn = document.getElementById('proceed-to-payment-btn');
+            const qrContainerEl = document.getElementById('payment-qr');
+            const headerMsgEl = document.getElementById('invoice-header-msg');
+            const qrHelper = document.getElementById('qr-helper');
+            const paymentHelper = document.getElementById('payment-helper');
+
+            if (isFinal) {
+                // Show thank-you at top and hide helper texts
+                if (headerMsgEl) {
+                    headerMsgEl.innerHTML = '<b>Thank you for your purchasing</b>';
+                }
+                if (qrHelper) qrHelper.style.display = 'none';
+                if (paymentHelper) paymentHelper.style.display = 'none';
+                // Hide QR and proceed button
+                if (qrContainerEl) qrContainerEl.innerHTML = '';
+                if (proceedBtn) proceedBtn.style.display = 'none';
+
+                // Show final thank you message in place of the QR/button area (with Back to Home button)
+                const finalMsg = document.createElement('div');
+                finalMsg.className = 'text-center p-6';
+                const paymentMethod = sessionStorage.getItem('paymentMethod') || 'Not specified';
+                let paymentDisplay = '';
+                if (paymentMethod === 'gcash') {
+                    paymentDisplay = 'GCASH Payment';
+                } else if (paymentMethod === 'bdo') {
+                    paymentDisplay = 'BDO Bank Transfer';
+                } else if (paymentMethod === 'bpi') {
+                    paymentDisplay = 'BPI Bank Transfer';
+                } else {
+                    paymentDisplay = paymentMethod.toUpperCase();
+                }
+                finalMsg.innerHTML = `
+                    <p class="text-sm text-gray-600">Payment Via: <span class="font-semibold">${paymentDisplay}</span></p>
+                    <p class="text-sm text-gray-600 mt-2">Wait for the admin confirmation of your order.</p>
+                    <div class="mt-4">
+                        <button id="back-to-home-btn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-700 transition-colors">Back to Home</button>
+                    </div>
+                `;
+                // Insert final message into the same parent as the QR/button
+                proceedBtn?.parentElement?.insertBefore(finalMsg, proceedBtn);
+
+                // Wire Back to Home button
+                const backBtn = document.getElementById('back-to-home-btn');
+                if (backBtn) {
+                    backBtn.addEventListener('click', () => {
+                        // Clear sessionStorage items related to the completed order
+                        sessionStorage.removeItem('currentOrder');
+                        sessionStorage.removeItem('paymentMethod');
+                        window.location.href = 'md.html';
+                    });
+                }
+            } else {
+                // This is the initial invoice, before payment
+                // Proceed to Payment button
+                document.getElementById('proceed-to-payment-btn').addEventListener('click', () => {
+                    // Pass order data via sessionStorage for payment page
+                    // This data should already be in sessionStorage, but we set it again to be safe
+                    sessionStorage.setItem('currentOrder', JSON.stringify(orderData));
+                    // Redirect to payment page
+                    window.location.href = 'payment.html';
+                });
+
+                // Build QR that links to payment page with encoded order (so scanning on another device works)
+                try {
+                    const encodeBase64 = (obj) => btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+                    const encoded = encodeBase64(orderData);
+
+                    // Build a relative link to payment.html with order param
+                    let baseURL;
+                    if (location.origin && location.origin !== 'null') {
+                        baseURL = location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+                    } else {
+                        baseURL = location.href.replace(/\/[^/]*$/, '/');
+                    }
+                    const qrLink = baseURL + 'payment.html?order=' + encodeURIComponent(encoded);
+
+                    // Build a QR-like grid pattern (similar to real QR codes)
+                    const qrSize = 25; // 25x25 grid
+                    const moduleSize = 8; // pixels per module
+                    const svgSize = qrSize * moduleSize;
+                    
+                    // Create a realistic QR pattern with three corner squares and random data pattern
+                    const generateQRPattern = () => {
+                        const grid = Array(qrSize).fill(null).map(() => Array(qrSize).fill(0));
+                        
+                        // Top-left corner square
+                        for (let i = 0; i < 7; i++) {
+                            for (let j = 0; j < 7; j++) {
+                                if (i < 6 && j < 6) grid[i][j] = (i === 0 || i === 5 || j === 0 || j === 5) ? 1 : (i === 1 || i === 4 || j === 1 || j === 4) ? 0 : 1;
+                                else if (i === 6 || j === 6) grid[i][j] = 0;
+                            }
+                        }
+                        // Top-right corner square
+                        for (let i = 0; i < 7; i++) {
+                            for (let j = qrSize - 7; j < qrSize; j++) {
+                                if (i < 6 && j > qrSize - 7) grid[i][j] = (i === 0 || i === 5 || j === qrSize - 1 || j === qrSize - 6) ? 1 : (i === 1 || i === 4 || j === qrSize - 2 || j === qrSize - 7) ? 0 : 1;
+                                else if (i === 6 || j === qrSize - 7) grid[i][j] = 0;
+                            }
+                        }
+                        // Bottom-left corner square
+                        for (let i = qrSize - 7; i < qrSize; i++) {
+                            for (let j = 0; j < 7; j++) {
+                                if (i > qrSize - 7 && j < 6) grid[i][j] = (i === qrSize - 1 || i === qrSize - 6 || j === 0 || j === 5) ? 1 : (i === qrSize - 2 || i === qrSize - 7 || j === 1 || j === 4) ? 0 : 1;
+                                else if (i === qrSize - 7 || j === 6) grid[i][j] = 0;
+                            }
+                        }
+                        
+                        // Fill the rest with a pseudo-random pattern
+                        for (let i = 0; i < qrSize; i++) {
+                            for (let j = 0; j < qrSize; j++) {
+                                if (grid[i][j] === 0) {
+                                    // Use a deterministic pattern based on position
+                                    grid[i][j] = ((i + j) % 3 === 0 || (i * j) % 7 < 3) ? 1 : 0;
+                                }
+                            }
+                        }
+                        return grid;
+                    };
+                    
+                    const qrGrid = generateQRPattern();
+                    let svgRects = '';
+                    for (let i = 0; i < qrSize; i++) {
+                        for (let j = 0; j < qrSize; j++) {
+                            if (qrGrid[i][j] === 1) {
+                                svgRects += `<rect x="${j * moduleSize}" y="${i * moduleSize}" width="${moduleSize}" height="${moduleSize}" fill="#000"/>`;
+                            }
+                        }
+                    }
+                    
+                    const svg = `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg" aria-label="QR code" role="img"><rect width="${svgSize}" height="${svgSize}" fill="#fff"/>${svgRects}</svg>`;
+
+                    qrContainerEl.innerHTML = `<a href="${qrLink}" id="qr-anchor" title="Open payment" aria-label="Click to open payment"><div style="display:inline-block; border: 2px solid #ddd; padding: 8px; border-radius: 8px; cursor: pointer;">${svg}</div></a>`;
+
+                    // If user clicks the QR on this device, also set sessionStorage then navigate
+                    document.getElementById('qr-anchor').addEventListener('click', (e) => {
+                        // store the order for the payment page on this device
+                        sessionStorage.setItem('currentOrder', JSON.stringify(orderData));
+                    });
+                } catch (err) {
+                    console.error('Failed to build QR', err);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

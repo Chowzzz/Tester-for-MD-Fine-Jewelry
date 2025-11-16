@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD Fine Jewelry</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#b8860b',
+                        secondary: '#f5f5dc'
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '8px'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Remix Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="dm.css">
+</head>
+<body class="bg-white">
+
+    <!-- Header Section -->
+    <header class="fixed top-0 left-0 right-0 bg-white bg-opacity-95 shadow-sm z-50">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="#" id="logo" class="logo text-2xl font-semibold text-primary">MD Fine Jewelry</a>
+            <nav class="hidden md:flex items-center space-x-8 main-nav">
+                <a href="#" class="nav-link text-gray-800 hover:text-primary transition-colors">Home</a>
+                <a href="#collections" class="nav-link text-gray-800 hover:text-primary transition-colors">Collections</a>
+                <a href="#new-arrivals" class="nav-link text-gray-800 hover:text-primary transition-colors">New Arrivals</a>
+                <a href="#about" class="nav-link text-gray-800 hover:text-primary transition-colors">About Us</a>
+            </nav>
+            <div class="flex items-center space-x-6">
+                 <!-- Header Icons: Search, Account, Wishlist, Cart -->
+                <div class="relative">
+                     <button id="search-btn" class="relative w-8 h-8 flex items-center justify-center cursor-pointer">
+                        <i class="ri-search-line ri-lg text-gray-700 hover:text-primary transition-colors"></i>
+                    </button>
+                    <div id="search-bar" class="absolute right-0 top-full mt-2 w-72 bg-white rounded-lg shadow-lg p-4 hidden">
+                        <div class="relative">
+                            <input type="text" id="search-input" placeholder="Search products..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-button focus:outline-none focus:border-primary">
+                            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        <div class="mt-2 max-h-60 overflow-y-auto" id="search-results"></div>
+                    </div>
+                </div>
+                <div class="relative account-icon">
+                    <button id="account-btn" class="w-8 h-8 flex items-center justify-center cursor-pointer">
+                        <i class="ri-user-line ri-lg text-gray-700 hover:text-primary transition-colors"></i>
+                    </button>
+                    <div id="account-dropdown" class="account-dropdown absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-4 hidden"></div>
+                </div>
+                <div class="relative notification-icon">
+                    <button id="notification-btn" class="relative w-8 h-8 flex items-center justify-center cursor-pointer">
+                        <i class="ri-notification-3-line ri-lg text-gray-700 hover:text-primary transition-colors"></i>
+                        <span id="notification-bell-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+                    </button>
+                    <div id="notification-dropdown" class="notification-dropdown absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-4 hidden min-w-80">
+                        <h3 class="font-medium text-gray-800 mb-3">Notifications</h3>
+                        <div class="space-y-3 max-h-60 overflow-y-auto" id="notification-items-container">
+                             <p class="text-center text-gray-500 text-sm">No new notifications</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative wishlist-icon">
+                    <button id="wishlist-btn-header" class="relative w-8 h-8 flex items-center justify-center cursor-pointer">
+                        <i class="ri-heart-3-line ri-lg text-gray-700 hover:text-primary transition-colors"></i>
+                        <span id="wishlist-count" class="absolute -top-2 -right-2 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </button>
+                    <div id="wishlist-dropdown" class="wishlist-dropdown absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-4 hidden">
+                        <h3 id="wishlist-header" class="font-medium text-gray-800 mb-3">Your Wishlist (0)</h3>
+                        <div class="space-y-3 max-h-60 overflow-y-auto" id="wishlist-items-container">
+                             <p class="text-center text-gray-500">Your wishlist is empty.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative cart-icon">
+                     <button id="cart-btn" class="relative w-8 h-8 flex items-center justify-center cursor-pointer">
+                        <i class="ri-shopping-bag-line ri-lg text-gray-700 hover:text-primary transition-colors"></i>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                    </button>
+                    <div id="cart-dropdown" class="cart-dropdown absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg p-4 hidden">
+                        <h3 id="cart-header" class="font-medium text-gray-800 mb-3">Your Cart (0)</h3>
+                        <div class="space-y-3 max-h-60 overflow-y-auto" id="cart-items-container">
+                             <p class="text-center text-gray-500">Your cart is empty.</p>
+                        </div>
+                        <div id="cart-footer" class="border-t border-gray-200 mt-4 pt-3 hidden">
+                            <div class="flex justify-between mb-3">
+                                <span class="text-gray-600">Subtotal:</span>
+                                <span class="font-medium" id="cart-subtotal">₱0.00</span>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button id="view-cart-btn" class="bg-primary text-white py-2 px-4 rounded-button text-center hover:bg-opacity-90 transition-colors whitespace-nowrap">View Cart</button>
+                                <a href="#" id="header-checkout-btn" class="border border-primary text-primary py-2 px-4 rounded-button text-center hover:bg-primary hover:text-white transition-colors whitespace-nowrap">Checkout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button id="mobile-menu-btn" class="md:hidden w-8 h-8 flex items-center justify-center">
+                    <i class="ri-menu-line ri-lg text-gray-700"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content: Hero, Collections, etc. -->
+    <main class="pt-20">
+        <!-- Hero Section -->
+        <section class="hero-slider relative h-[600px] bg-gray-100">
+             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://readdy.ai/api/search-image?query=luxury%20jewelry%20collection%20display%20with%20gold%20and%20diamond%20pieces%20on%20elegant%20display%2C%20soft%20lighting%2C%20high-end%20luxury%20atmosphere%2C%20professional%20jewelry%20photography%20with%20neutral%20background%2C%20detailed%20textures&width=1920&height=1080&seq=4&orientation=landscape');">
+                <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+            </div>
+            <div class="container mx-auto px-4 h-full flex items-center">
+                <div class="max-w-xl relative z-10">
+                    <h1 class="text-5xl md:text-6xl font-bold text-white mb-4 leading-tight">We offer wide selection of top quality diamonds</h1>
+                    <p class="text-xl text-white mb-8">Discover our affordable collection of fine diamonds, meticulously selected to make your dreams come true.</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#collections" class="bg-primary text-white py-3 px-8 rounded-button font-medium hover:bg-opacity-90 transition-all shadow-lg whitespace-nowrap">Shop Now</a>
+                        <a href="#about" class="bg-transparent border-2 border-white text-white py-3 px-8 rounded-button font-medium hover:bg-white hover:text-gray-900 transition-all whitespace-nowrap">Our Story</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Collections Section -->
+        <section id="collections" class="py-20 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold text-gray-900 mb-4">Our Collections</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Explore our curated collections of fine jewelry, each piece a testament to exceptional craftsmanship and timeless design.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Category Cards -->
+                    <div class="category-card group relative overflow-hidden rounded-lg shadow-md">
+                        <div class="h-80 overflow-hidden"><img src="https://readdy.ai/api/search-image?query=elegant%20diamond%20rings%20collection%20on%20minimalist%20display%2C%20professional%20jewelry%20photography%2C%20high-end%20luxury%20product%20shot%20with%20neutral%20background%2C%20soft%20lighting%2C%20detailed%20textures&width=600&height=800&seq=5&orientation=portrait" alt="Rings Collection" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-6">
+                            <h3 class="text-2xl font-bold text-white mb-2">Rings</h3>
+                            <p class="text-white text-opacity-90 mb-4">From engagement rings to statement pieces</p>
+                            <button data-category="rings" class="explore-btn inline-block bg-white text-gray-900 py-2 px-6 rounded-button font-medium hover:bg-primary hover:text-white transition-all opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300 whitespace-nowrap">Explore Collection</button>
+                        </div>
+                    </div>
+                    <div class="category-card group relative overflow-hidden rounded-lg shadow-md">
+                        <div class="h-80 overflow-hidden"><img src="https://readdy.ai/api/search-image?query=elegant%20gold%20and%20diamond%20necklaces%20displayed%20on%20minimalist%20stands%2C%20professional%20jewelry%20photography%2C%20high-end%20luxury%20product%20shot%20with%20neutral%20background%2C%20soft%20lighting%2C%20detailed%20textures&width=600&height=800&seq=6&orientation=portrait" alt="Necklaces Collection" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-6">
+                            <h3 class="text-2xl font-bold text-white mb-2">Necklaces</h3>
+                            <p class="text-white text-opacity-90 mb-4">Elegant pendants and statement pieces</p>
+                            <button data-category="necklaces" class="explore-btn inline-block bg-white text-gray-900 py-2 px-6 rounded-button font-medium hover:bg-primary hover:text-white transition-all opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300 whitespace-nowrap">Explore Collection</button>
+                        </div>
+                    </div>
+                    <div class="category-card group relative overflow-hidden rounded-lg shadow-md">
+                        <div class="h-80 overflow-hidden"><img src="https://readdy.ai/api/search-image?query=elegant%20diamond%20and%20pearl%20earrings%20on%20minimalist%20display%2C%20professional%20jewelry%20photography%2C%20high-end%20luxury%20product%20shot%20with%20neutral%20background%2C%20soft%20lighting%2C%20detailed%20textures&width=600&height=800&seq=7&orientation=portrait" alt="Earrings Collection" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-6">
+                            <h3 class="text-2xl font-bold text-white mb-2">Earrings</h3>
+                            <p class="text-white text-opacity-90 mb-4">From studs to dramatic drops</p>
+                            <button data-category="earrings" class="explore-btn inline-block bg-white text-gray-900 py-2 px-6 rounded-button font-medium hover:bg-primary hover:text-white transition-all opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300 whitespace-nowrap">Explore Collection</button>
+                        </div>
+                    </div>
+                    <div class="category-card group relative overflow-hidden rounded-lg shadow-md">
+                        <div class="h-80 overflow-hidden"><img src="https://readdy.ai/api/search-image?query=elegant%20gold%20and%20diamond%20bracelets%20on%20minimalist%20display%2C%20professional%20jewelry%20photography%2C%20high-end%20luxury%20product%20shot%20with%20neutral%20background%2C%20soft%20lighting%2C%20detailed%20textures&width=600&height=800&seq=8&orientation=portrait" alt="Bracelets Collection" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-6">
+                            <h3 class="text-2xl font-bold text-white mb-2">Bracelets</h3>
+                            <p class="text-white text-opacity-90 mb-4">Tennis bracelets and elegant cuffs</p>
+                            <button data-category="bracelets" class="explore-btn inline-block bg-white text-gray-900 py-2 px-6 rounded-button font-medium hover:bg-primary hover:text-white transition-all opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 duration-300 whitespace-nowrap">Explore Collection</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Arrivals Section -->
+        <section id="new-arrivals" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold text-gray-900 mb-4">New Arrivals</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Discover our latest additions, crafted with the finest materials and exceptional attention to detail.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="new-arrivals-grid"></div>
+                <div class="text-center mt-12">
+                    <button id="view-all-arrivals-btn" class="inline-block border-2 border-gray-900 text-gray-900 py-3 px-8 rounded-button font-medium hover:bg-gray-900 hover:text-white transition-colors whitespace-nowrap">View All New Arrivals</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Testimonials Section -->
+        <section class="py-20 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold text-gray-900 mb-4">What Our Clients Say</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Hear from our valued clients about their experience with MD Fine Jewelry.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-50 p-8 rounded-lg shadow-sm">
+                        <div class="flex items-center text-primary mb-4"><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i></div>
+                        <p class="text-gray-700 mb-6">"The engagement ring I purchased exceeded all my expectations. The craftsmanship is exceptional, and the diamonds sparkle brilliantly. My fiancée was absolutely speechless when I proposed!"</p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden mr-4"><img src="bruce123.png" alt="Bruce Justine" class="w-full h-full object-cover object-top"></div>
+                            <div><h4 class="font-medium text-gray-900">Justine Bruce</h4><p class="text-sm text-gray-600">Marikina, MK</p></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-8 rounded-lg shadow-sm">
+                        <div class="flex items-center text-primary mb-4"><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i></div>
+                        <p class="text-gray-700 mb-6">"I've been a loyal customer for years, and MD Fine Jewelry never disappoints. Their attention to detail and personalized service make every purchase special. The pearl necklace I received for my anniversary is absolutely stunning."</p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden mr-4"><img src="gil123.jpg" alt="Gil dave" class="w-full h-full object-cover object-top"></div>
+                            <div><h4 class="font-medium text-gray-900">Gil Ferrer</h4><p class="text-sm text-gray-600">Upper Antipolo, UA</p></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-8 rounded-lg shadow-sm">
+                        <div class="flex items-center text-primary mb-4"><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i></div>
+                        <p class="text-gray-700 mb-6">"I am extremely satisfied with my purchase from MD Fine Jewelry. The quality and craftsmanship of their pieces are exceptional. Their customer service is outstanding, making the entire shopping experience truly memorable."</p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden mr-4"><img src="sesbini123.png" alt="Sesbini justine" class="w-full h-full object-cover object-top"></div>
+                            <div><h4 class="font-medium text-gray-900">Justine Sesbini</h4><p class="text-sm text-gray-600">Lower Antipolo, LA</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
+                        <p class="text-gray-700 mb-4">MD Fine Jewelry is a premier jewelry retailer, bringing exquisite pieces from renowned international designers and manufacturers to our discerning clientele. Our journey began in 2023 with a vision to curate the finest jewelry collections from Italy, Switzerland, and other prestigious jewelry-making regions.</p>
+                        <p class="text-gray-700 mb-4">As an exclusive importer and retailer, we carefully select each piece in our collection, ensuring that it meets our rigorous standards of quality, design, and value. We partner with established manufacturers who share our commitment to exceptional craftsmanship and ethically sourced materials.</p>
+                        <p class="text-gray-700 mb-6">Our expertise lies in curating and presenting these magnificent pieces to our clients, helping them find the perfect jewelry that resonates with their personal style and occasions. We take pride in offering authenticated, high-quality imported jewelry at competitive prices.</p>
+                        <a href="#footer" class="inline-block bg-primary text-white py-3 px-8 rounded-button font-medium hover:bg-opacity-90 transition-colors whitespace-nowrap">Learn More</a>
+                    </div>
+                    <div class="relative h-[500px] rounded-lg overflow-hidden shadow-lg">
+                        <img src="model1.webp" alt="Jewelry Model" class="w-full h-full object-cover object-top">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter Section -->
+        <section class="py-20 bg-gray-900 text-white">
+            <div class="container mx-auto px-4">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h2 class="text-3xl font-bold mb-6">Join Our Exclusive List</h2>
+                    <p class="text-gray-300 mb-8">Subscribe to receive updates on new collections, special events, and exclusive offers.</p>
+                    <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+                        <input type="email" placeholder="Your email address" required class="flex-1 py-3 px-4 rounded-button bg-white bg-opacity-10 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-primary transition-colors">
+                        <button type="submit" class="bg-primary text-white py-3 px-6 rounded-button font-medium hover:bg-opacity-90 transition-colors whitespace-nowrap">Subscribe</button>
+                    </form>
+                    <p class="text-sm text-gray-400 mt-4">By subscribing, you agree to our Privacy Policy and consent to receive updates from MD Fine Jewelry.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Checkout Page Section -->
+    <div id="checkout-page" class="hidden min-h-screen bg-white">
+        <div class="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Left Side: Form -->
+            <div class="lg:pr-8">
+                <div class="mb-8">
+                    <button id="back-to-shop-btn" class="text-primary hover:underline mb-4">&lt; Back to Shop</button>
+                    <h2 class="text-3xl font-bold text-gray-900">Checkout</h2>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 border-b pb-2">Contact Information</h3>
+                    <div class="flex justify-between items-baseline">
+                        <p class="text-gray-600">Email or mobile phone number</p>
+                        <span class="text-sm text-gray-500">Have an account? <a href="#" id="checkout-login-btn" class="text-primary hover:underline">Sign in</a></span>
+                    </div>
+                    <input type="text" id="checkout-email" class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-button shadow-sm focus:outline-none focus:ring-primary focus:border-primary" placeholder="email@example.com">
+                    <div class="mt-2 flex items-center">
+                        <input type="checkbox" id="email-me" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="email-me" class="ml-2 block text-sm text-gray-900">Email me with news and offers</label>
+                    </div>
+                </div>
+
+                <!-- Delivery Information -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 border-b pb-2">Delivery</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                         <input type="text" placeholder="Country/Region" value="Philippines" class="w-full px-3 py-2 border border-gray-300 rounded-button bg-gray-50" readonly>
+                         <div class="grid grid-cols-2 gap-4">
+                            <input type="text" id="checkout-first-name" placeholder="First name" class="w-full px-3 py-2 border border-gray-300 rounded-button">
+                            <input type="text" id="checkout-last-name" placeholder="Last name" class="w-full px-3 py-2 border border-gray-300 rounded-button">
+                         </div>
+                         <input type="text" id="checkout-address" placeholder="Address" class="w-full px-3 py-2 border border-gray-300 rounded-button">
+                         <input type="text" placeholder="Apartment, suite, etc. (optional)" class="w-full px-3 py-2 border border-gray-300 rounded-button">
+                         <div class="grid grid-cols-2 gap-4">
+                            <input type="text" id="checkout-postal-code" placeholder="Postal code" class="w-full px-3 py-2 border border-gray-300 rounded-button">
+                            <input type="text" id="checkout-city" placeholder="City" class="w-full px-3 py-2 border border-gray-300 rounded-button">
+                         </div>
+                         <input type="text" id="checkout-phone" placeholder="Phone" class="w-full px-3 py-2 border border-gray-300 rounded-button">
+                    </div>
+                </div>
+
+                <!-- Payment Section -->
+                <div>
+                     <h3 class="text-xl font-semibold mb-4 border-b pb-2">Payment</h3>
+                     <p class="text-sm text-gray-500 mb-4">All transactions are secure and encrypted.</p>
+                     <div class="border rounded-button p-4">
+                        <p class="font-medium">Credit/Debit Card</p>
+                        <p class="text-sm text-gray-600 mt-2">After clicking "Pay now", you will be directed to invoice.</p>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Order Summary -->
+            <div class="bg-gray-50 p-8 rounded-lg h-fit lg:mt-16">
+                <h3 class="text-xl font-semibold mb-6">Order Summary</h3>
+                <div id="checkout-summary-items" class="space-y-4 mb-6 border-b pb-6"></div>
+                <div class="space-y-2 mb-6 border-b pb-6">
+                    <div class="flex justify-between">
+                        <p class="text-gray-600">Subtotal</p>
+                        <p id="checkout-subtotal" class="font-medium">₱0.00</p>
+                    </div>
+                    <div class="flex justify-between">
+                        <p class="text-gray-600">Shipping</p>
+                        <p class="text-gray-500 text-sm">Calculated at next step</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center font-bold text-xl">
+                    <p>Total</p>
+                    <p id="checkout-total">₱0.00</p>
+                </div>
+                <button id="pay-now-btn" class="w-full bg-primary text-white py-3 px-4 rounded-button font-medium hover:bg-opacity-90 transition-colors mt-8">Pay Now</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer id="footer" class="bg-gray-800 text-white pt-16 pb-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">MD Fine Jewelry</h3>
+                    <p class="text-gray-400 mb-6">Crafting timeless elegance since 2023. Each piece tells a story of exceptional craftsmanship and enduring beauty.</p>
+                    <div class="flex space-x-4">
+                        <a href="https://www.facebook.com/MDFineJewelryII" target="_blank" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-primary transition-colors"><i class="ri-facebook-fill"></i></a>
+                        <a href="https://www.instagram.com/md_fine_jewelry_/" target="_blank" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-primary transition-colors"><i class="ri-instagram-line"></i></a>
+                        <a href="https://invite.viber.com/?g2=AQBP9YsI9kNpG8VCxnUdL3ZxDT%2Ffn0qW8MvJaxAFJUZHI5a4BYmjwnH1sdJtEsVf3" target="_blank" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-primary transition-colors"><i class="ri-viber-fill"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Shop</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#collections" class="text-gray-400 hover:text-white transition-colors" onclick="document.querySelector('[data-category=rings]').scrollIntoView({ behavior: 'smooth' });">Rings</a></li>
+                        <li><a href="#collections" class="text-gray-400 hover:text-white transition-colors" onclick="document.querySelector('[data-category=necklace]').scrollIntoView({ behavior: 'smooth' });">Necklaces</a></li>
+                        <li><a href="#collections" class="text-gray-400 hover:text-white transition-colors" onclick="document.querySelector('[data-category=earrings]').scrollIntoView({ behavior: 'smooth' });">Earrings</a></li>
+                        <li><a href="#collections" class="text-gray-400 hover:text-white transition-colors" onclick="document.querySelector('[data-category=bracelet]').scrollIntoView({ behavior: 'smooth' });">Bracelets</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Customer Service</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">FAQs</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Shipping & Returns</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Visit Us</h3>
+                    <p class="text-gray-400 mb-2">UP Town Katipunan Quezon City, QC 1105</p>
+                    <p class="text-gray-400 mb-2">Email: mdfinejewelry@gmail.com</p>
+                    <p class="text-gray-400">Phone: +63 930-604-4636</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 mb-4 md:mb-0">&copy; 2025 MD Fine Jewelry. All rights reserved.</p>
+                    <div class="flex items-center space-x-4">
+                        <img src="45aa809d-f138-469d-86a9-74bc496d99a3.png" alt="Payment Icon 1" class="h-5 inline-block mr-1">
+                        <img src="c4fb6487-fe29-4521-b695-ded838ba535f.png" alt="Payment Icon 2" class="h-8 inline-block mr-1">
+                        <img src="bpi.png" alt="Payment Icon 3" class="h-9 inline-block">
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Modals -->
+    <div id="account-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg w-full max-w-md relative">
+             <button id="close-account-modal-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
+                <i class="ri-close-line ri-xl"></i>
+            </button>
+            <div id="account-modal-content" class="p-6"></div>
+        </div>
+    </div>
+    
+    <div id="quick-view-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden items-center justify-center p-4">
+        <div id="quick-view-modal-content" class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto relative p-6"></div>
+    </div>
+    
+    <div id="new-arrivals-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden items-start justify-center overflow-y-auto p-4">
+        <div class="bg-white rounded-lg max-w-7xl w-full mx-auto my-8 relative">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">All New Arrivals</h3>
+                    <button id="close-arrivals-modal-btn" class="text-gray-500 hover:text-gray-700"><i class="ri-close-line ri-2x"></i></button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8" id="all-new-arrivals-grid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="collection-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden items-start justify-center overflow-y-auto p-4">
+         <div class="bg-white rounded-lg max-w-7xl w-full mx-auto my-8 relative">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="collection-modal-title" class="text-2xl font-bold text-gray-900">Collection</h3>
+                    <button id="close-collection-modal-btn" class="text-gray-500 hover:text-gray-700"><i class="ri-close-line ri-2x"></i></button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8" id="collection-modal-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="wishlist-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden items-start justify-center overflow-y-auto p-4">
+        <div class="bg-white rounded-lg max-w-7xl w-full mx-auto my-8 relative">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">My Wishlist</h3>
+                    <button id="close-wishlist-modal-btn" class="text-gray-500 hover:text-gray-700"><i class="ri-close-line ri-2x"></i></button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8" id="wishlist-modal-grid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast flex items-center">
+        <i id="toast-icon" class="ri-check-line mr-2"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Rating Modal -->
+    <div id="rating-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center p-4">
+        <div id="rating-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+            <!-- Content will be injected by JS -->
+        </div>
+    </div>
+
+    <!-- View Cart Modal -->
+    <div id="view-cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden items-start justify-center overflow-y-auto p-4">
+        <div class="bg-white rounded-lg max-w-4xl w-full mx-auto my-8 relative">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">Shopping Cart</h3>
+                    <button id="close-view-cart-modal-btn" class="text-gray-500 hover:text-gray-700"><i class="ri-close-line ri-2x"></i></button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Cart Items List -->
+                    <div class="lg:col-span-2">
+                        <div id="view-cart-items" class="space-y-4 border rounded-lg p-4">
+                            <p class="text-center text-gray-500">Your cart is empty.</p>
+                        </div>
+                    </div>
+                    <!-- Cart Summary -->
+                    <div class="bg-gray-50 p-6 rounded-lg h-fit">
+                        <h4 class="text-lg font-semibold mb-4">Order Summary</h4>
+                        <div class="space-y-2 mb-6 pb-6 border-b">
+                            <div class="flex justify-between">
+                                <p class="text-gray-600">Subtotal</p>
+                                <p id="view-cart-subtotal" class="font-medium">₱0.00</p>
+                            </div>
+                            <div class="flex justify-between">
+                                <p class="text-gray-600">Shipping</p>
+                                <p class="text-sm text-gray-500">Free</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center font-bold text-lg mb-6">
+                            <p>Total</p>
+                            <p id="view-cart-total">₱0.00</p>
+                        </div>
+                        <button id="proceed-to-checkout-btn" class="w-full bg-primary text-white py-3 px-4 rounded-button font-medium hover:bg-opacity-90 transition-colors mb-2">Proceed to Checkout</button>
+                        <button id="continue-shopping-btn" class="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-button font-medium hover:bg-gray-50 transition-colors">Continue Shopping</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Link -->
+    <div id="admin-access-btn" style="position: fixed; bottom: 20px; left: 20px; z-index: 999;">
+        <a href="admin.html" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-700 transition-colors flex items-center gap-2" title="Admin Panel (Admin Only)">
+            <i class="ri-admin-line"></i>
+            <span class="hidden sm:inline">Admin</span>
+        </a>
+    </div>
+
+    <script src="mdmd.js"></script>
+</body>
+</html>
