@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             targetEmail: userEmail
                         };
                         notificationLog.push(newNotif);
-                        localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
+localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
                     }
                 } catch (err) {
                     console.error('Failed to create refund notification for user', err);
@@ -536,7 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PRODUCT FORM ---
     document.getElementById('add-product-btn')?.addEventListener('click', () => {
-        document.getElementById('product-id').value = '';
+        // The line below was causing an error because 'product-id' doesn't exist in the form
+        // document.getElementById('product-id').value = ''; 
+        document.getElementById('product-form').dataset.productId = ''; // Clear the stored ID instead
         document.getElementById('product-name').value = '';
         document.getElementById('product-price').value = '';
         document.getElementById('product-category').value = '';
