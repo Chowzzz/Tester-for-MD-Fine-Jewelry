@@ -1,12 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- STATE & DATA ---
     let adminLoggedIn = JSON.parse(localStorage.getItem('md_adminLoggedIn')) || false;
-    let adminUsers = JSON.parse(localStorage.getItem('md_admin_users')) || [
-        { email: 'admin@mdfine.com', password: 'admin123' }
-    ];
+    
+    // Robust data loading
+    let adminUsers = [];
+    try {
+        const storedAdminUsers = localStorage.getItem('md_admin_users');
+        if (storedAdminUsers) {
+            const parsed = JSON.parse(storedAdminUsers);
+            if (Array.isArray(parsed)) {
+                adminUsers = parsed;
+            } else {
+                 adminUsers = [{ email: 'admin@mdfine.com', password: 'admin123' }];
+            }
+        } else {
+            adminUsers = [{ email: 'admin@mdfine.com', password: 'admin123' }];
+        }
+    } catch (e) {
+        console.error('Failed to parse admin users:', e);
+        adminUsers = [{ email: 'admin@mdfine.com', password: 'admin123' }];
+    }
+
     let currentAdminUser = JSON.parse(localStorage.getItem('md_currentAdmin')) || null;
-    let products = JSON.parse(localStorage.getItem('md_products')) || [];
-    let users = JSON.parse(localStorage.getItem('md_users')) || [];
+    
+    let products = [];
+    try {
+        const storedProducts = localStorage.getItem('md_products');
+        if (storedProducts) {
+            const parsed = JSON.parse(storedProducts);
+            if (Array.isArray(parsed)) {
+                products = parsed;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to parse products:', e);
+        products = [];
+    }
+
+    let users = [];
+    try {
+        const storedUsers = localStorage.getItem('md_users');
+        if (storedUsers) {
+            const parsed = JSON.parse(storedUsers);
+            if (Array.isArray(parsed)) {
+                users = parsed;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to parse users:', e);
+        users = [];
+    }
+
 
     // --- DOM ELEMENTS ---
     const loginPage = document.getElementById('login-page');
@@ -21,6 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = document.getElementById('admin-toast-icon');
         const msg = document.getElementById('admin-toast-message');
         
+        if (!toast || !icon || !msg) return; // Guard against missing elements
+
         msg.textContent = message;
         icon.className = isError ? 'ri-error-warning-line mr-2' : 'ri-check-line mr-2';
         toast.style.backgroundColor = isError ? '#ef4444' : '#111827';
@@ -37,23 +83,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOGIN LOGIC ---
     const setupLoginForm = () => {
         const loginForm = document.getElementById('admin-login-form');
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('admin-email').value;
+                const password = document.getElementById('admin-password').value;
 
-            const admin = adminUsers.find(a => a.email === email && a.password === password);
-            if (admin) {
-                adminLoggedIn = true;
-                currentAdminUser = { email: admin.email, lastLogin: new Date().toLocaleString() };
-                localStorage.setItem('md_adminLoggedIn', JSON.stringify(adminLoggedIn));
-                localStorage.setItem('md_currentAdmin', JSON.stringify(currentAdminUser));
-                showAdminToast('Login successful!');
-                showDashboard();
-            } else {
-                showAdminToast('Invalid email or password', true);
-            }
-        });
+                const admin = adminUsers.find(a => a.email === email && a.password === password);
+                if (admin) {
+                    adminLoggedIn = true;
+                    currentAdminUser = { email: admin.email, lastLogin: new Date().toLocaleString() };
+                    localStorage.setItem('md_adminLoggedIn', JSON.stringify(adminLoggedIn));
+                    localStorage.setItem('md_currentAdmin', JSON.stringify(currentAdminUser));
+                    showAdminToast('Login successful!');
+                    showDashboard();
+                } else {
+                    showAdminToast('Invalid email or password', true);
+                }
+            });
+        }
     };
 
     const showDashboard = () => {
@@ -66,8 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DASHBOARD ---
     const loadDashboard = () => {
         // Always refresh users/products from storage in case they changed elsewhere
-        users = JSON.parse(localStorage.getItem('md_users')) || [];
-        products = JSON.parse(localStorage.getItem('md_products')) || products;
+        try {
+            users = JSON.parse(localStorage.getItem('md_users')) || [];
+            products = JSON.parse(localStorage.getItem('md_products')) || products;
+        } catch (e) {
+            console.error("Error refreshing data in loadDashboard", e);
+            users = users || [];
+            products = products || [];
+        }
+
 
         const allOrders = [];
         users.forEach(user => {
@@ -88,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const productCount = products.length;
         const orderCount = allOrders.length;
         const customerCount = users.length;
-        const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
+        const totalRevenue = allOrders.reduce((sum, order) => (sum + (order.total || 0)), 0);
 
         // Update stats
         document.getElementById('stat-products').textContent = productCount;
@@ -111,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="text-xs text-gray-400">${displayDate}</p>
                     </div>
                     <div class="text-right">
-                        <p class="font-semibold">₱${order.total.toFixed(2)}</p>
+                        <p class="font-semibold">₱${(order.total || 0).toFixed(2)}</p>
                         <span class="text-xs px-2 py-1 rounded-full ${order.status === 'To Ship' ? 'bg-yellow-100 text-yellow-800' : order.status === 'To Receive' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">${order.status}</span>
                     </div>
                 </div>
@@ -162,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr>
                 <td class="px-6 py-3">${product.id}</td>
                 <td class="px-6 py-3">${product.name}</td>
-                <td class="px-6 py-3">₱${product.price.toFixed(2)}</td>
+                <td class="px-6 py-3">₱${(product.price || 0).toFixed(2)}</td>
                 <td class="px-6 py-3">${product.category}</td>
                 <td class="px-6 py-3">
                     <button class="action-btn action-btn-edit mr-2" onclick="editProduct(${product.id})">Edit</button>
@@ -188,19 +243,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteProduct = (id) => {
-        if (confirm('Are you sure you want to delete this product?')) {
+        // REMOVED: confirm() is blocked in this environment
+        // if (confirm('Are you sure you want to delete this product?')) {
             products = products.filter(p => p.id !== id);
             localStorage.setItem('md_products', JSON.stringify(products));
             loadProducts();
             showAdminToast('Product deleted successfully');
-        }
+        // }
     };
 
     // --- ORDERS PAGE ---
     const loadOrders = () => {
         const ordersTableBody = document.getElementById('orders-table-body');
         // Refresh users from storage
-        users = JSON.parse(localStorage.getItem('md_users')) || [];
+        try {
+            users = JSON.parse(localStorage.getItem('md_users')) || [];
+        } catch(e) {
+            console.error("Failed to load users for orders page", e);
+            users = users || [];
+        }
+        
         const allOrders = [];
         users.forEach(user => {
             if (user.orders) {
@@ -220,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         allOrders.sort((a, b) => (b._ts || 0) - (a._ts || 0));
 
         if (allOrders.length === 0) {
-            ordersTableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-3 text-center text-gray-500">No orders</td></tr>';
+            ordersTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-3 text-center text-gray-500">No orders</td></tr>';
             return;
         }
 
@@ -228,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr>
                 <td class="px-6 py-3 font-semibold">${order.id}</td>
                 <td class="px-6 py-3">${order.customerName}</td>
-                <td class="px-6 py-3">₱${order.total.toFixed(2)}</td>
+                <td class="px-6 py-3">₱${(order.total || 0).toFixed(2)}</td>
                 <td class="px-6 py-3">
                     <select class="px-2 py-1 border rounded text-sm status-select" data-order-id="${order.id}" data-user-email="${order.userId}" onchange="updateOrderStatus(this)">
                         <option value="To Ship" ${order.status === 'To Ship' ? 'selected' : ''}>To Ship</option>
@@ -340,9 +402,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const notificationLog = JSON.parse(localStorage.getItem('md_notification_log')) || [];
                     let message = '';
                     if (newRefundStatus === 'approved') {
-                        message = `Your refund request for order ${orderId} has been approved. The amount ₱${order.total.toFixed(2)} will be processed soon.`;
+                        message = `Your refund request for order ${orderId} has been approved. The amount ₱${(order.total || 0).toFixed(2)} will be processed soon.`;
                     } else if (newRefundStatus === 'completed') {
-                        message = `Your refund for order ${orderId} has been completed. Amount ₱${order.total.toFixed(2)} has been returned to your account.`;
+                        message = `Your refund for order ${orderId} has been completed. Amount ₱${(order.total || 0).toFixed(2)} has been returned to your account.`;
                     } else if (newRefundStatus === 'requested') {
                         message = `Your refund request for order ${orderId} has been received and is under review.`;
                     }
@@ -372,7 +434,13 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
             const order = user.orders.find(o => o.id === orderId);
             if (order) {
                 const displayDate = order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString());
-                alert(`Order Details:\n\nID: ${orderId}\nCustomer: ${user.fullName}\nEmail: ${user.email}\nTotal: ₱${order.total.toFixed(2)}\nStatus: ${order.status}\nDate: ${displayDate}\nPayment Method: ${order.paymentMethod || 'Not specified'}\n\nItems: ${order.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}`);
+                const itemsString = (order.items || []).map(i => `${i.name} (x${i.quantity})`).join(', ');
+                const message = `Order Details:\n\nID: ${orderId}\nCustomer: ${user.fullName}\nEmail: ${user.email}\nTotal: ₱${(order.total || 0).toFixed(2)}\nStatus: ${order.status}\nDate: ${displayDate}\nPayment Method: ${order.paymentMethod || 'Not specified'}\n\nItems: ${itemsString}`;
+                
+                // REMOVED: alert() is blocked. Log to console and show toast instead.
+                // alert(message);
+                console.log(message);
+                showAdminToast(`Details for order ${orderId} logged to console.`);
             }
         }
     };
@@ -381,7 +449,13 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
     const loadInvoices = () => {
         const invoicesTableBody = document.getElementById('invoices-table-body');
         // Refresh users from storage
-        users = JSON.parse(localStorage.getItem('md_users')) || [];
+        try {
+            users = JSON.parse(localStorage.getItem('md_users')) || [];
+        } catch(e) {
+            console.error("Failed to load users for invoices page", e);
+            users = users || [];
+        }
+
         const allOrders = [];
         users.forEach(user => {
             if (user.orders) {
@@ -403,7 +477,7 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
             <tr>
                 <td class="px-6 py-3 font-semibold">${order.id}</td>
                 <td class="px-6 py-3">${order.customerName}</td>
-                <td class="px-6 py-3">₱${order.total.toFixed(2)}</td>
+                <td class="px-6 py-3">₱${(order.total || 0).toFixed(2)}</td>
                 <td class="px-6 py-3">${order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString())}</td>
                 <td class="px-6 py-3">
                     <button class="action-btn action-btn-view">Download Invoice</button>
@@ -416,7 +490,7 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
     const loadCustomers = () => {
         const customersTableBody = document.getElementById('customers-table-body');
         customersTableBody.innerHTML = users.map(user => {
-            const totalSpent = user.orders ? user.orders.reduce((sum, order) => sum + order.total, 0) : 0;
+            const totalSpent = user.orders ? user.orders.reduce((sum, order) => sum + (order.total || 0), 0) : 0;
             const orderCount = user.orders ? user.orders.length : 0;
             return `
                 <tr>
@@ -432,7 +506,13 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
 
     // --- NOTIFICATIONS PAGE ---
     const loadNotifications = () => {
-        const notificationLog = JSON.parse(localStorage.getItem('md_notification_log')) || [];
+        let notificationLog = [];
+        try {
+            notificationLog = JSON.parse(localStorage.getItem('md_notification_log')) || [];
+        } catch(e) {
+            console.error("Failed to load notification log", e);
+        }
+
         const notificationLogDiv = document.getElementById('notification-log');
         
         if (notificationLog.length === 0) {
@@ -440,9 +520,9 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
         } else {
             notificationLogDiv.innerHTML = notificationLog.slice().reverse().map(notif => `
                 <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p class="font-semibold text-gray-900">${notif.title}</p>
-                    <p class="text-sm text-gray-600 mt-1">${notif.message}</p>
-                    <p class="text-xs text-gray-400 mt-2">${notif.timestamp}</p>
+                    <p class="font-semibold text-gray-900">${notif.title || ''}</p>
+                    <p class="text-sm text-gray-600 mt-1">${notif.message || ''}</p>
+                    <p class="text-xs text-gray-400 mt-2">${notif.timestamp || ''}</p>
                 </div>
             `).join('');
         }
@@ -501,21 +581,23 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
         const addAdminBtn = document.getElementById('add-admin-btn');
         if (addAdminBtn) {
             addAdminBtn.addEventListener('click', () => {
-                const email = prompt('Enter new admin email:');
-                if (!email) return;
+                // REMOVED: prompt() is blocked in this environment.
+                // const email = prompt('Enter new admin email:');
+                // if (!email) return;
                 
-                if (adminUsers.find(a => a.email === email)) {
-                    showAdminToast('Admin with this email already exists', true);
-                    return;
-                }
+                // if (adminUsers.find(a => a.email === email)) {
+                //     showAdminToast('Admin with this email already exists', true);
+                //     return;
+                // }
 
-                const password = prompt('Enter password for this admin:');
-                if (!password) return;
+                // const password = prompt('Enter password for this admin:');
+                // if (!password) return;
 
-                adminUsers.push({ email, password });
-                localStorage.setItem('md_admin_users', JSON.stringify(adminUsers));
-                showAdminToast(`Admin user ${email} added successfully`);
-                loadSettings();
+                // adminUsers.push({ email, password });
+                // localStorage.setItem('md_admin_users', JSON.stringify(adminUsers));
+                // showAdminToast(`Admin user ${email} added successfully`);
+                // loadSettings();
+                showAdminToast('Adding admins via prompt is disabled in this environment.', true);
             });
         }
     };
@@ -526,12 +608,13 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
             return;
         }
         
-        if (confirm(`Are you sure you want to remove admin user ${email}?`)) {
+        // REMOVED: confirm() is blocked in this environment.
+        // if (confirm(`Are you sure you want to remove admin user ${email}?`)) {
             adminUsers = adminUsers.filter(a => a.email !== email);
             localStorage.setItem('md_admin_users', JSON.stringify(adminUsers));
             showAdminToast(`Admin user ${email} has been removed`);
             loadSettings();
-        }
+        // }
     };
 
     // --- PRODUCT FORM ---
@@ -574,7 +657,7 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
             }
         } else {
             // Add new
-            const newId = Math.max(...products.map(p => p.id), 0) + 1;
+            const newId = (products.length > 0 ? Math.max(...products.map(p => p.id)) : 0) + 1;
             products.push({
                 id: newId,
                 name,
@@ -588,13 +671,15 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
 
         localStorage.setItem('md_products', JSON.stringify(products));
         document.getElementById('product-modal').classList.add('hidden');
+        document.getElementById('product-form').reset(); // Also reset the form
         document.getElementById('product-form').dataset.productId = '';
         loadProducts();
     });
 
     // --- LOGOUT ---
     document.getElementById('admin-logout-btn').addEventListener('click', () => {
-        if (confirm('Are you sure you want to logout?')) {
+        // REMOVED: confirm() is blocked in this environment.
+        // if (confirm('Are you sure you want to logout?')) {
             adminLoggedIn = false;
             currentAdminUser = null;
             localStorage.removeItem('md_adminLoggedIn');
@@ -603,7 +688,7 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
             adminDashboard.classList.add('hidden');
             document.getElementById('admin-login-form').reset();
             showAdminToast('Logged out successfully');
-        }
+        // }
     });
 
     // --- INITIALIZATION ---
