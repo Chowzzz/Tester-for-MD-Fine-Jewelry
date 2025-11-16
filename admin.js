@@ -83,7 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOGIN LOGIC ---
     const setupLoginForm = () => {
         const loginForm = document.getElementById('admin-login-form');
-        if (loginForm) {
+        // This check is crucial
+        if (loginForm) { 
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const email = document.getElementById('admin-email').value;
@@ -105,9 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const showDashboard = () => {
-        loginPage.classList.add('hidden');
-        adminDashboard.classList.remove('hidden');
-        document.getElementById('admin-user-name').textContent = currentAdminUser.email;
+        if (loginPage) loginPage.classList.add('hidden');
+        if (adminDashboard) adminDashboard.classList.remove('hidden');
+        
+        const adminUserName = document.getElementById('admin-user-name');
+        if (adminUserName && currentAdminUser) {
+            adminUserName.textContent = currentAdminUser.email;
+        }
         loadDashboard();
     };
 
@@ -115,8 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadDashboard = () => {
         // Always refresh users/products from storage in case they changed elsewhere
         try {
-            users = JSON.parse(localStorage.getItem('md_users')) || [];
-            products = JSON.parse(localStorage.getItem('md_products')) || products;
+            const storedUsers = localStorage.getItem('md_users');
+            const storedProducts = localStorage.getItem('md_products');
+            users = storedUsers ? JSON.parse(storedUsers) : [];
+            products = storedProducts ? JSON.parse(storedProducts) : [];
+            if (!Array.isArray(users)) users = [];
+            if (!Array.isArray(products)) products = [];
         } catch (e) {
             console.error("Error refreshing data in loadDashboard", e);
             users = users || [];
@@ -146,43 +155,56 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalRevenue = allOrders.reduce((sum, order) => (sum + (order.total || 0)), 0);
 
         // Update stats
-        document.getElementById('stat-products').textContent = productCount;
-        document.getElementById('stat-orders').textContent = orderCount;
-        document.getElementById('stat-customers').textContent = customerCount;
-        document.getElementById('stat-revenue').textContent = `₱${totalRevenue.toFixed(2)}`;
+        const statProducts = document.getElementById('stat-products');
+        const statOrders = document.getElementById('stat-orders');
+        const statCustomers = document.getElementById('stat-customers');
+        const statRevenue = document.getElementById('stat-revenue');
+
+        if (statProducts) statProducts.textContent = productCount;
+        if (statOrders) statOrders.textContent = orderCount;
+        if (statCustomers) statCustomers.textContent = customerCount;
+        if (statRevenue) statRevenue.textContent = `₱${totalRevenue.toFixed(2)}`;
 
         // Load recent orders (sorted by timestamp desc)
         const recentOrdersDiv = document.getElementById('recent-orders');
-        if (allOrders.length > 0) {
-            allOrders.sort((a, b) => (b._ts || 0) - (a._ts || 0));
-            const recent = allOrders.slice(0, 5);
-            recentOrdersDiv.innerHTML = recent.map(order => {
-                const displayDate = order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString());
-                return `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                    <div>
-                        <p class="font-semibold">${order.id}</p>
-                        <p class="text-sm text-gray-600">${order.customerName}</p>
-                        <p class="text-xs text-gray-400">${displayDate}</p>
+        if (recentOrdersDiv) {
+            if (allOrders.length > 0) {
+                allOrders.sort((a, b) => (b._ts || 0) - (a._ts || 0));
+                const recent = allOrders.slice(0, 5);
+                recentOrdersDiv.innerHTML = recent.map(order => {
+                    const displayDate = order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString());
+                    return `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div>
+                            <p class="font-semibold">${order.id}</p>
+                            <p class="text-sm text-gray-600">${order.customerName}</p>
+                            <p class="text-xs text-gray-400">${displayDate}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold">₱${(order.total || 0).toFixed(2)}</p>
+                            <span class="text-xs px-2 py-1 rounded-full ${order.status === 'To Ship' ? 'bg-yellow-100 text-yellow-800' : order.status === 'To Receive' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">${order.status}</span>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <p class="font-semibold">₱${(order.total || 0).toFixed(2)}</p>
-                        <span class="text-xs px-2 py-1 rounded-full ${order.status === 'To Ship' ? 'bg-yellow-100 text-yellow-800' : order.status === 'To Receive' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">${order.status}</span>
-                    </div>
-                </div>
-            `}).join('');
-        } else {
-            recentOrdersDiv.innerHTML = '<p class="text-center text-gray-500 py-6">No orders yet</p>';
+                `}).join('');
+            } else {
+                recentOrdersDiv.innerHTML = '<p class="text-center text-gray-500 py-6">No orders yet</p>';
+            }
         }
     };
 
     // --- PAGE NAVIGATION ---
     const showPage = (pageName) => {
         pageTabs.forEach(tab => tab.classList.add('hidden'));
-        document.getElementById(`page-${pageName}`).classList.remove('hidden');
+        const activePage = document.getElementById(`page-${pageName}`);
+        if (activePage) {
+            activePage.classList.remove('hidden');
+        }
         
         sidebarBtns.forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+        const activeBtn = document.querySelector(`[data-page="${pageName}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
 
         const titleMap = {
             dashboard: 'Dashboard',
@@ -193,7 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
             notifications: 'Broadcast Notifications',
             settings: 'Admin Settings'
         };
-        pageTitle.textContent = titleMap[pageName] || 'Dashboard';
+        if (pageTitle) {
+            pageTitle.textContent = titleMap[pageName] || 'Dashboard';
+        }
 
         if (pageName === 'products') loadProducts();
         else if (pageName === 'orders') loadOrders();
@@ -213,18 +237,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PRODUCTS PAGE ---
     const loadProducts = () => {
         const productsTableBody = document.getElementById('products-table-body');
-        productsTableBody.innerHTML = products.map(product => `
-            <tr>
-                <td class="px-6 py-3">${product.id}</td>
-                <td class="px-6 py-3">${product.name}</td>
-                <td class="px-6 py-3">₱${(product.price || 0).toFixed(2)}</td>
-                <td class="px-6 py-3">${product.category}</td>
-                <td class="px-6 py-3">
-                    <button class="action-btn action-btn-edit mr-2" onclick="editProduct(${product.id})">Edit</button>
-                    <button class="action-btn action-btn-delete" onclick="deleteProduct(${product.id})">Delete</button>
-                </td>
-            </tr>
-        `).join('');
+        if (productsTableBody) {
+            productsTableBody.innerHTML = products.map(product => `
+                <tr>
+                    <td class="px-6 py-3">${product.id}</td>
+                    <td class="px-6 py-3">${product.name}</td>
+                    <td class="px-6 py-3">₱${(product.price || 0).toFixed(2)}</td>
+                    <td class="px-6 py-3">${product.category}</td>
+                    <td class="px-6 py-3">
+                        <button class="action-btn action-btn-edit mr-2" onclick="editProduct(${product.id})">Edit</button>
+                        <button class="action-btn action-btn-delete" onclick="deleteProduct(${product.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
     };
 
     window.editProduct = (id) => {
@@ -244,12 +270,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.deleteProduct = (id) => {
         // REMOVED: confirm() is blocked in this environment
-        // if (confirm('Are you sure you want to delete this product?')) {
-            products = products.filter(p => p.id !== id);
-            localStorage.setItem('md_products', JSON.stringify(products));
-            loadProducts();
-            showAdminToast('Product deleted successfully');
-        // }
+        products = products.filter(p => p.id !== id);
+        localStorage.setItem('md_products', JSON.stringify(products));
+        loadProducts();
+        showAdminToast('Product deleted successfully');
     };
 
     // --- ORDERS PAGE ---
@@ -281,39 +305,41 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sort by timestamp desc for consistent ordering
         allOrders.sort((a, b) => (b._ts || 0) - (a._ts || 0));
 
-        if (allOrders.length === 0) {
-            ordersTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-3 text-center text-gray-500">No orders</td></tr>';
-            return;
-        }
+        if (ordersTableBody) {
+            if (allOrders.length === 0) {
+                ordersTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-3 text-center text-gray-500">No orders</td></tr>';
+                return;
+            }
 
-        ordersTableBody.innerHTML = allOrders.map(order => `
-            <tr>
-                <td class="px-6 py-3 font-semibold">${order.id}</td>
-                <td class="px-6 py-3">${order.customerName}</td>
-                <td class="px-6 py-3">₱${(order.total || 0).toFixed(2)}</td>
-                <td class="px-6 py-3">
-                    <select class="px-2 py-1 border rounded text-sm status-select" data-order-id="${order.id}" data-user-email="${order.userId}" onchange="updateOrderStatus(this)">
-                        <option value="To Ship" ${order.status === 'To Ship' ? 'selected' : ''}>To Ship</option>
-                        <option value="To Receive" ${order.status === 'To Receive' ? 'selected' : ''}>To Receive</option>
-                        <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                    </select>
-                </td>
-                <td class="px-6 py-3">${order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString())}</td>
-                <td class="px-6 py-3">
-                    ${order.refund_status ? `
-                        <select class="px-2 py-1 border rounded text-sm refund-select ${order.refund_status === 'requested' ? 'border-yellow-500' : order.refund_status === 'approved' ? 'border-blue-500' : 'border-green-500'}" data-order-id="${order.id}" data-user-email="${order.userId}" onchange="updateRefundStatus(this)">
-                            <option value="">None</option>
-                            <option value="requested" ${order.refund_status === 'requested' ? 'selected' : ''}>Requested</option>
-                            <option value="approved" ${order.refund_status === 'approved' ? 'selected' : ''}>Approved</option>
-                            <option value="completed" ${order.refund_status === 'completed' ? 'selected' : ''}>Completed</option>
+            ordersTableBody.innerHTML = allOrders.map(order => `
+                <tr>
+                    <td class="px-6 py-3 font-semibold">${order.id}</td>
+                    <td class="px-6 py-3">${order.customerName}</td>
+                    <td class="px-6 py-3">₱${(order.total || 0).toFixed(2)}</td>
+                    <td class="px-6 py-3">
+                        <select class="px-2 py-1 border rounded text-sm status-select" data-order-id="${order.id}" data-user-email="${order.userId}" onchange="updateOrderStatus(this)">
+                            <option value="To Ship" ${order.status === 'To Ship' ? 'selected' : ''}>To Ship</option>
+                            <option value="To Receive" ${order.status === 'To Receive' ? 'selected' : ''}>To Receive</option>
+                            <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
                         </select>
-                    ` : `<span class="text-xs text-gray-400">No Refund</span>`}
-                </td>
-                <td class="px-6 py-3">
-                    <button class="action-btn action-btn-view" onclick="viewOrderDetails('${order.id}', '${order.userId}')">View</button>
-                </td>
-            </tr>
-        `).join('');
+                    </td>
+                    <td class="px-6 py-3">${order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString())}</td>
+                    <td class="px-6 py-3">
+                        ${order.refund_status ? `
+                            <select class="px-2 py-1 border rounded text-sm refund-select ${order.refund_status === 'requested' ? 'border-yellow-500' : order.refund_status === 'approved' ? 'border-blue-500' : 'border-green-500'}" data-order-id="${order.id}" data-user-email="${order.userId}" onchange="updateRefundStatus(this)">
+                                <option value="">None</option>
+                                <option value="requested" ${order.refund_status === 'requested' ? 'selected' : ''}>Requested</option>
+                                <option value="approved" ${order.refund_status === 'approved' ? 'selected' : ''}>Approved</option>
+                                <option value="completed" ${order.refund_status === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        ` : `<span class="text-xs text-gray-400">No Refund</span>`}
+                    </td>
+                    <td class="px-6 py-3">
+                        <button class="action-btn action-btn-view" onclick="viewOrderDetails('${order.id}', '${order.userId}')">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
     };
 
     window.updateOrderStatus = (selectElement) => {
@@ -438,7 +464,6 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
                 const message = `Order Details:\n\nID: ${orderId}\nCustomer: ${user.fullName}\nEmail: ${user.email}\nTotal: ₱${(order.total || 0).toFixed(2)}\nStatus: ${order.status}\nDate: ${displayDate}\nPayment Method: ${order.paymentMethod || 'Not specified'}\n\nItems: ${itemsString}`;
                 
                 // REMOVED: alert() is blocked. Log to console and show toast instead.
-                // alert(message);
                 console.log(message);
                 showAdminToast(`Details for order ${orderId} logged to console.`);
             }
@@ -473,35 +498,39 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
         // Sort by timestamp desc
         allOrders.sort((a, b) => (b._ts || 0) - (a._ts || 0));
 
-        invoicesTableBody.innerHTML = allOrders.map(order => `
-            <tr>
-                <td class="px-6 py-3 font-semibold">${order.id}</td>
-                <td class="px-6 py-3">${order.customerName}</td>
-                <td class="px-6 py-3">₱${(order.total || 0).toFixed(2)}</td>
-                <td class="px-6 py-3">${order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString())}</td>
-                <td class="px-6 py-3">
-                    <button class="action-btn action-btn-view">Download Invoice</button>
-                </td>
-            </tr>
-        `).join('');
+        if (invoicesTableBody) {
+            invoicesTableBody.innerHTML = allOrders.map(order => `
+                <tr>
+                    <td class="px-6 py-3 font-semibold">${order.id}</td>
+                    <td class="px-6 py-3">${order.customerName}</td>
+                    <td class="px-6 py-3">₱${(order.total || 0).toFixed(2)}</td>
+                    <td class="px-6 py-3">${order.timestamp ? new Date(order.timestamp).toLocaleString() : (isNaN(Date.parse(order.date)) ? order.date : new Date(order.date).toLocaleString())}</td>
+                    <td class="px-6 py-3">
+                        <button class="action-btn action-btn-view">Download Invoice</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
     };
 
     // --- CUSTOMERS PAGE ---
     const loadCustomers = () => {
         const customersTableBody = document.getElementById('customers-table-body');
-        customersTableBody.innerHTML = users.map(user => {
-            const totalSpent = user.orders ? user.orders.reduce((sum, order) => sum + (order.total || 0), 0) : 0;
-            const orderCount = user.orders ? user.orders.length : 0;
-            return `
-                <tr>
-                    <td class="px-6 py-3">${user.fullName}</td>
-                    <td class="px-6 py-3">${user.email}</td>
-                    <td class="px-6 py-3">${user.phone}</td>
-                    <td class="px-6 py-3">${orderCount}</td>
-                    <td class="px-6 py-3 font-semibold">₱${totalSpent.toFixed(2)}</td>
-                </tr>
-            `;
-        }).join('');
+        if (customersTableBody) {
+            customersTableBody.innerHTML = users.map(user => {
+                const totalSpent = user.orders ? user.orders.reduce((sum, order) => sum + (order.total || 0), 0) : 0;
+                const orderCount = user.orders ? user.orders.length : 0;
+                return `
+                    <tr>
+                        <td class="px-6 py-3">${user.fullName}</td>
+                        <td class="px-6 py-3">${user.email}</td>
+                        <td class="px-6 py-3">${user.phone}</td>
+                        <td class="px-6 py-3">${orderCount}</td>
+                        <td class="px-6 py-3 font-semibold">₱${totalSpent.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
     };
 
     // --- NOTIFICATIONS PAGE ---
@@ -515,66 +544,86 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
 
         const notificationLogDiv = document.getElementById('notification-log');
         
-        if (notificationLog.length === 0) {
-            notificationLogDiv.innerHTML = '<p class="text-center text-gray-500 py-4">No notifications sent yet</p>';
-        } else {
-            notificationLogDiv.innerHTML = notificationLog.slice().reverse().map(notif => `
-                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p class="font-semibold text-gray-900">${notif.title || ''}</p>
-                    <p class="text-sm text-gray-600 mt-1">${notif.message || ''}</p>
-                    <p class="text-xs text-gray-400 mt-2">${notif.timestamp || ''}</p>
-                </div>
-            `).join('');
+        if (notificationLogDiv) {
+            if (notificationLog.length === 0) {
+                notificationLogDiv.innerHTML = '<p class="text-center text-gray-500 py-4">No notifications sent yet</p>';
+            } else {
+                notificationLogDiv.innerHTML = notificationLog.slice().reverse().map(notif => `
+                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="font-semibold text-gray-900">${notif.title || ''}</p>
+                        <p class="text-sm text-gray-600 mt-1">${notif.message || ''}</p>
+                        <p class="text-xs text-gray-400 mt-2">${notif.timestamp || ''}</p>
+                    </div>
+                `).join('');
+            }
         }
 
-        document.getElementById('send-notification-btn').addEventListener('click', () => {
-            document.getElementById('notification-modal').classList.remove('hidden');
-        });
+        const sendBtn = document.getElementById('send-notification-btn');
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => {
+                document.getElementById('notification-modal').classList.remove('hidden');
+            });
+        }
 
-        document.getElementById('close-notification-modal').addEventListener('click', () => {
-            document.getElementById('notification-modal').classList.add('hidden');
-        });
+        const closeBtn = document.getElementById('close-notification-modal');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                document.getElementById('notification-modal').classList.add('hidden');
+            });
+        }
 
-        document.getElementById('notification-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const title = document.getElementById('notification-title').value;
-            const message = document.getElementById('notification-message').value;
+        const notifForm = document.getElementById('notification-form');
+        if (notifForm) {
+            notifForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('notification-title').value;
+                const message = document.getElementById('notification-message').value;
 
-            const newNotification = {
-                title: title,
-                message: message,
-                timestamp: new Date().toLocaleString()
-            };
+                const newNotification = {
+                    title: title,
+                    message: message,
+                    timestamp: new Date().toLocaleString()
+                };
 
-            notificationLog.push(newNotification);
-            localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
-            
-            showAdminToast('Notification sent to all customers!');
-            document.getElementById('notification-form').reset();
-            document.getElementById('notification-modal').classList.add('hidden');
-            loadNotifications();
-        });
+                notificationLog.push(newNotification);
+                localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
+                
+                showAdminToast('Notification sent to all customers!');
+                document.getElementById('notification-form').reset();
+                document.getElementById('notification-modal').classList.add('hidden');
+                loadNotifications();
+            });
+        }
     };
 
     // --- SETTINGS PAGE ---
     const loadSettings = () => {
-        document.getElementById('settings-email').textContent = currentAdminUser.email;
-        document.getElementById('settings-last-login').textContent = currentAdminUser.lastLogin || 'Never';
+        const settingsEmail = document.getElementById('settings-email');
+        const settingsLastLogin = document.getElementById('settings-last-login');
+
+        if (settingsEmail && currentAdminUser) {
+            settingsEmail.textContent = currentAdminUser.email;
+        }
+        if (settingsLastLogin && currentAdminUser) {
+            settingsLastLogin.textContent = currentAdminUser.lastLogin || 'Never';
+        }
 
         // Render admins list
         const adminsList = document.getElementById('admins-list');
-        if (adminUsers && adminUsers.length > 0) {
-            adminsList.innerHTML = adminUsers.map(admin => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
-                    <div>
-                        <p class="font-semibold text-gray-900">${admin.email}</p>
-                        <p class="text-xs text-gray-500">Password: ••••••••</p>
+        if (adminsList) {
+            if (adminUsers && adminUsers.length > 0) {
+                adminsList.innerHTML = adminUsers.map(admin => `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
+                        <div>
+                            <p class="font-semibold text-gray-900">${admin.email}</p>
+                            <p class="text-xs text-gray-500">Password: ••••••••</p>
+                        </div>
+                        ${(currentAdminUser && admin.email !== currentAdminUser.email) ? `<button class="action-btn action-btn-delete" onclick="deleteAdmin('${admin.email}')">Remove</button>` : `<span class="text-xs font-semibold text-amber-600">Current Admin</span>`}
                     </div>
-                    ${admin.email !== currentAdminUser.email ? `<button class="action-btn action-btn-delete" onclick="deleteAdmin('${admin.email}')">Remove</button>` : `<span class="text-xs font-semibold text-amber-600">Current Admin</span>`}
-                </div>
-            `).join('');
-        } else {
-            adminsList.innerHTML = '<p class="text-gray-500 text-sm">No other admin users yet</p>';
+                `).join('');
+            } else {
+                adminsList.innerHTML = '<p class="text-gray-500 text-sm">No other admin users yet</p>';
+            }
         }
 
         // Add Admin User Button
@@ -582,119 +631,119 @@ localStorage.setItem('md_notification_log', JSON.stringify(notificationLog));
         if (addAdminBtn) {
             addAdminBtn.addEventListener('click', () => {
                 // REMOVED: prompt() is blocked in this environment.
-                // const email = prompt('Enter new admin email:');
-                // if (!email) return;
-                
-                // if (adminUsers.find(a => a.email === email)) {
-                //     showAdminToast('Admin with this email already exists', true);
-                //     return;
-                // }
-
-                // const password = prompt('Enter password for this admin:');
-                // if (!password) return;
-
-                // adminUsers.push({ email, password });
-                // localStorage.setItem('md_admin_users', JSON.stringify(adminUsers));
-                // showAdminToast(`Admin user ${email} added successfully`);
-                // loadSettings();
                 showAdminToast('Adding admins via prompt is disabled in this environment.', true);
             });
         }
     };
 
     window.deleteAdmin = (email) => {
-        if (email === currentAdminUser.email) {
+        if (currentAdminUser && email === currentAdminUser.email) {
             showAdminToast('Cannot delete your own admin account', true);
             return;
         }
         
         // REMOVED: confirm() is blocked in this environment.
-        // if (confirm(`Are you sure you want to remove admin user ${email}?`)) {
-            adminUsers = adminUsers.filter(a => a.email !== email);
-            localStorage.setItem('md_admin_users', JSON.stringify(adminUsers));
-            showAdminToast(`Admin user ${email} has been removed`);
-            loadSettings();
-        // }
+        adminUsers = adminUsers.filter(a => a.email !== email);
+        localStorage.setItem('md_admin_users', JSON.stringify(adminUsers));
+        showAdminToast(`Admin user ${email} has been removed`);
+        loadSettings();
     };
 
-    // --- PRODUCT FORM ---
-    document.getElementById('add-product-btn')?.addEventListener('click', () => {
-        // The line below was causing an error because 'product-id' doesn't exist in the form
-        // document.getElementById('product-id').value = ''; 
-        document.getElementById('product-form').dataset.productId = ''; // Clear the stored ID instead
-        document.getElementById('product-name').value = '';
-        document.getElementById('product-price').value = '';
-        document.getElementById('product-category').value = '';
-        document.getElementById('product-description').value = '';
-        document.getElementById('product-image').value = '';
-        document.getElementById('product-modal-title').textContent = 'Add Product';
-        document.getElementById('product-modal').classList.remove('hidden');
-    });
+    // --- PRODUCT FORM (GLOBAL LISTENERS) ---
+    // This is the one you were asking about.
+    const addProductBtn = document.getElementById('add-product-btn');
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', () => {
+            document.getElementById('product-form').dataset.productId = ''; // Clear the stored ID
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-category').value = '';
+            document.getElementById('product-description').value = '';
+            document.getElementById('product-image').value = '';
+            document.getElementById('product-modal-title').textContent = 'Add Product';
+            document.getElementById('product-modal').classList.remove('hidden');
+        });
+    }
 
-    document.getElementById('close-product-modal')?.addEventListener('click', () => {
-        document.getElementById('product-modal').classList.add('hidden');
-    });
+    const closeProductModalBtn = document.getElementById('close-product-modal');
+    if (closeProductModalBtn) {
+        closeProductModalBtn.addEventListener('click', () => {
+            document.getElementById('product-modal').classList.add('hidden');
+        });
+    }
 
-    document.getElementById('product-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const productId = document.getElementById('product-form').dataset.productId;
-        const name = document.getElementById('product-name').value;
-        const price = parseFloat(document.getElementById('product-price').value);
-        const category = document.getElementById('product-category').value;
-        const description = document.getElementById('product-description').value;
-        const image = document.getElementById('product-image').value;
+    const productForm = document.getElementById('product-form');
+    if (productForm) {
+        productForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const productId = productForm.dataset.productId;
+            const name = document.getElementById('product-name').value;
+            const price = parseFloat(document.getElementById('product-price').value);
+            const category = document.getElementById('product-category').value;
+            const description = document.getElementById('product-description').value;
+            const image = document.getElementById('product-image').value;
 
-        if (productId) {
-            // Edit existing
-            const product = products.find(p => p.id == productId);
-            if (product) {
-                product.name = name;
-                product.price = price;
-                product.category = category;
-                product.description = description;
-                product.image = image;
-                showAdminToast('Product updated successfully');
+            if (productId) {
+                // Edit existing
+                const product = products.find(p => p.id == productId);
+                if (product) {
+                    product.name = name;
+                    product.price = price;
+                    product.category = category;
+                    product.description = description;
+                    product.image = image;
+                    showAdminToast('Product updated successfully');
+                }
+            } else {
+                // Add new
+                const newId = (products.length > 0 ? Math.max(...products.map(p => p.id).filter(id => id > 0)) : 0) + 1;
+                products.push({
+                    id: newId,
+                    name,
+                    price,
+                    category,
+                    description,
+                    image
+                });
+                showAdminToast('Product added successfully');
             }
-        } else {
-            // Add new
-            const newId = (products.length > 0 ? Math.max(...products.map(p => p.id)) : 0) + 1;
-            products.push({
-                id: newId,
-                name,
-                price,
-                category,
-                description,
-                image
-            });
-            showAdminToast('Product added successfully');
-        }
 
-        localStorage.setItem('md_products', JSON.stringify(products));
-        document.getElementById('product-modal').classList.add('hidden');
-        document.getElementById('product-form').reset(); // Also reset the form
-        document.getElementById('product-form').dataset.productId = '';
-        loadProducts();
-    });
+            localStorage.setItem('md_products', JSON.stringify(products));
+            document.getElementById('product-modal').classList.add('hidden');
+            productForm.reset(); // Also reset the form
+            productForm.dataset.productId = '';
+            loadProducts();
+        });
+    }
 
-    // --- LOGOUT ---
-    document.getElementById('admin-logout-btn').addEventListener('click', () => {
-        // REMOVED: confirm() is blocked in this environment.
-        // if (confirm('Are you sure you want to logout?')) {
+    // --- LOGOUT (GLOBAL LISTENER) ---
+    const logoutBtn = document.getElementById('admin-logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            // REMOVED: confirm() is blocked in this environment.
             adminLoggedIn = false;
             currentAdminUser = null;
             localStorage.removeItem('md_adminLoggedIn');
             localStorage.removeItem('md_currentAdmin');
-            loginPage.classList.remove('hidden');
-            adminDashboard.classList.add('hidden');
-            document.getElementById('admin-login-form').reset();
+            
+            if (loginPage) loginPage.classList.remove('hidden');
+            if (adminDashboard) adminDashboard.classList.add('hidden');
+            
+            const loginForm = document.getElementById('admin-login-form');
+            if(loginForm) loginForm.reset();
+
             showAdminToast('Logged out successfully');
-        // }
-    });
+        });
+    }
 
     // --- INITIALIZATION ---
-    setupLoginForm();
+    setupLoginForm(); // This will now safely do nothing if the login form isn't present
 
     if (adminLoggedIn && currentAdminUser) {
         showDashboard();
+    } else {
+        // Ensure dashboard is hidden and login is shown if not logged in
+        if (loginPage) loginPage.classList.remove('hidden');
+        if (adminDashboard) adminDashboard.classList.add('hidden');
     }
 });
